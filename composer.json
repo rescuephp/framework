@@ -1,0 +1,37 @@
+{
+    "name": "rescuephp/framework",
+    "description": "Rescue PHP framework",
+    "type": "framework",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Aleksey Ishutin",
+            "email": "ishutin.alexey@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.3",
+        "ext-json": "*",
+        "rescuephp/http": "^1.0",
+        "rescuephp/container": "^1.0",
+        "rescuephp/routing": "^1.0"
+    },
+    "require-dev": {
+        "ext-xdebug": "*",
+        "phpunit/phpunit": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rescue\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Rescue\\Tests\\": "tests/"
+        }
+    }
+}
