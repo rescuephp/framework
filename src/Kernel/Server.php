@@ -4,7 +4,6 @@ namespace Rescue\Kernel;
 
 use ReflectionException;
 use Rescue\Container\ContainerInterface;
-use Rescue\Helper\Formatter\Exception\FormatterException;
 use Rescue\Helper\Formatter\FormatterInterface;
 use Rescue\Http\Exception\NotFoundException;
 use Rescue\Http\RequestHandlerInterface;
@@ -69,6 +68,11 @@ class Server
         return $this;
     }
 
+    public function getRouter(): RouterItemStorageInterface
+    {
+        return $this->router;
+    }
+
     /**
      * @return ResponseInterface
      * @throws InvalidRequestHandler
@@ -77,7 +81,6 @@ class Server
      */
     public function run(): ResponseInterface
     {
-//        try {
         $item = $this->findRouterItem();
 
         if ($item === null) {
