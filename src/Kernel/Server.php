@@ -5,7 +5,6 @@ namespace Rescue\Kernel;
 use ReflectionException;
 use Rescue\Container\ContainerInterface;
 use Rescue\Helper\Formatter\FormatterInterface;
-use Rescue\Http\Exception\NotFoundException;
 use Rescue\Http\RequestHandlerInterface;
 use Rescue\Http\ResponseInterface;
 use Rescue\Http\ServerRequestInterface;
@@ -40,63 +39,37 @@ class Server
      */
     private $formatter;
 
-    /**
-     * @var bool
-     */
-    private $debugMode;
-
     public function __construct(
         ContainerInterface $container,
         ServerRequestInterface $request,
         ResponseInterface $response,
         RouterItemStorageInterface $router,
-        FormatterInterface $formatter,
-        bool $debugMode = false
+        FormatterInterface $formatter
     ) {
         $this->container = $container;
         $this->request = $request;
         $this->response = $response;
         $this->router = $router;
         $this->formatter = $formatter;
-        $this->debugMode = $debugMode;
-    }
-
-    public function setDebugMode(bool $mode): self
-    {
-        $this->debugMode = $mode;
-
-        return $this;
-    }
-
-    public function getRouter(): RouterItemStorageInterface
-    {
-        return $this->router;
     }
 
     /**
+     * @param RouterItemInterface $routerItem
      * @return ResponseInterface
-     * @throws InvalidRequestHandler
-     * @throws NotFoundException
      * @throws ReflectionException
      */
-    public function run(): ResponseInterface
+    public function run(RouterItemInterface $routerItem): ResponseInterface
     {
-        $item = $this->findRouterItem();
+        $handlerInstance = $this->createRequestHandler($routerItem->getHandlerClass());
 
-        if ($item === null) {
-            throw new NotFoundException();
-        }
-
-        $handlerInstance = $this->createRequestHandler($item->getHandlerClass());
-
-        foreach ($item->getMiddlewareStorage()->getMiddlewares() as $middleware) {
+        foreach ($routerItem->getMiddlewareStorage()->getMiddlewares() as $middleware) {
             $this->response = $middleware->process($this->request, $handlerInstance);
         }
 
         return $this->response;
     }
 
-    private function findRouterItem(): ?RouterItemInterface
+    public function findRouterItem(): ?RouterItemInterface
     {
         $items = $this->router->getItems();
 

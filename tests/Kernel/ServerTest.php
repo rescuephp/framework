@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use Rescue\Container\Container;
 use Rescue\Helper\Formatter\JsonFormatter;
-use Rescue\Http\Exception\NotFoundException;
 use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\ServerRequestFactory;
 use Rescue\Http\Factory\StreamFactory;
@@ -28,7 +27,6 @@ final class ServerTest extends TestCase
 {
     /**
      * @throws ReflectionException
-     * @throws NotFoundException
      */
     public function testBase(): void
     {
@@ -57,9 +55,9 @@ final class ServerTest extends TestCase
         $router->get('/test4', get_class($handler));
         $router->get('/', get_class($handler));
 
-        $server = new Server($container, $request, $response, $router, $formatter, false);
-        $server->setDebugMode(true);
-        $response = $server->run();
+        $server = new Server($container, $request, $response, $router, $formatter);
+        $routerItem = $server->findRouterItem();
+        $response = $server->run($routerItem);
 
         $output = (new OutputResponse())->output($response, false);
 
@@ -68,7 +66,6 @@ final class ServerTest extends TestCase
 
     /**
      * @throws ReflectionException
-     * @throws NotFoundException
      */
     public function testUrlWithParams(): void
     {
@@ -95,16 +92,13 @@ final class ServerTest extends TestCase
         $router->get('/test/{apiName}/{id}', get_class($handler));
 
         $server = new Server($container, $request, $response, $router, $formatter);
-        $response = $server->run();
+        $routerItem = $server->findRouterItem();
+        $response = $server->run($routerItem);
 
         $this->assertEquals('{"apiName":"user","id":"13"}', (new OutputResponse())->output($response, false));
     }
 
-    /**
-     * @throws ReflectionException
-     * @throws NotFoundException
-     */
-    public function testErrorMessage(): void
+    public function testRouterItemNotFound(): void
     {
         $streamFactory = new StreamFactory();
         $responseFactory = new ResponseFactory($streamFactory);
@@ -118,14 +112,12 @@ final class ServerTest extends TestCase
 
         $server = new Server($container, $request, $response, $router, $formatter);
 
-        $this->expectException(NotFoundException::class);
-
-        $server->run();
+        $routerItem = $server->findRouterItem();
+        $this->assertNull($routerItem);
     }
 
     /**
      * @throws ReflectionException
-     * @throws NotFoundException
      */
     public function testUnknownErrorMessage(): void
     {
@@ -152,18 +144,18 @@ final class ServerTest extends TestCase
         $router = new RouterItemStorage($middlewareStorage, 'GET');
         $router->on('get', '/', get_class($handler));
 
-        $server = new Server($container, $request, $response, $router, $formatter, true);
+        $server = new Server($container, $request, $response, $router, $formatter);
 
         $this->expectException(InvalidArgumentException::class);
 
-        $server->run();
+        $routerItem = $server->findRouterItem();
+        $server->run($routerItem);
     }
 
 
     /**
      * @runInSeparateProcess
      * @throws ReflectionException
-     * @throws NotFoundException
      */
     public function testSendHeaders(): void
     {
@@ -190,8 +182,9 @@ final class ServerTest extends TestCase
 
         $router->get('/test', get_class($handler));
 
-        $server = new Server($container, $request, $response, $router, $formatter, true);
-        $response = $server->run();
+        $server = new Server($container, $request, $response, $router, $formatter);
+        $routerItem = $server->findRouterItem();
+        $response = $server->run($routerItem);
 
         (new OutputResponse())->output($response);
         $this->assertEquals(
@@ -202,7 +195,6 @@ final class ServerTest extends TestCase
     /**
      * @runInSeparateProcess
      * @throws ReflectionException
-     * @throws NotFoundException
      */
     public function testInvalidRequestHandler(): void
     {
@@ -222,11 +214,12 @@ final class ServerTest extends TestCase
 
         $router->get('/test', get_class($invalidHandler));
 
-        $server = new Server($container, $request, $response, $router, $formatter, false);
+        $server = new Server($container, $request, $response, $router, $formatter);
 
         $this->expectException(InvalidRequestHandler::class);
 
-        $server->run();
+        $routerItem = $server->findRouterItem();
+        $server->run($routerItem);
     }
 
     private function getRequestHandlerMiddleware(): MiddlewareInterface
