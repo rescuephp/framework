@@ -1,27 +1,30 @@
 <?php
 
-namespace Rescue\Helper\Formatter;
+declare(strict_types=1);
 
-use Rescue\Helper\Formatter\Exception\FormatException;
-use Throwable;
+namespace Rescue\Helper\Response;
 
-class JsonFormatter implements FormatterInterface
+use Rescue\Helper\Json\Exception\EncodeException;
+use Rescue\Helper\Response\Exception\FormatException;
+
+class JsonResponse implements ResponseFormatInterface
 {
+    /**
+     * @inheritDoc
+     */
     public function getContentType(): string
     {
         return 'application/json';
     }
 
     /**
-     * @param mixed $message
-     * @return string
-     * @throws FormatException
+     * @inheritDoc
      */
     public function format($message): string
     {
         try {
             $result = jsonEncode($message);
-        } catch (Throwable $exception) {
+        } catch (EncodeException $exception) {
             throw new FormatException(
                 $exception->getMessage(),
                 $exception->getCode(),

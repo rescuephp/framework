@@ -10,7 +10,7 @@
          stopOnFailure="false"
 >
     <testsuites>
-        <testsuite name="Rescue Http Test Suite">
+        <testsuite name="Rescue Framework Test Suite">
             <directory>./tests</directory>
         </testsuite>
     </testsuites>

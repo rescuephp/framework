@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Rescue\Helper\Json\Exception;
 
-use Throwable;
+use Exception;
 
-interface JsonException extends Throwable
+class DecodeException extends Exception implements JsonException
 {
 
 }

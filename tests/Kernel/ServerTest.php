@@ -1,225 +1,102 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rescue\Tests\Kernel;
 
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
-use Rescue\Container\Container;
-use Rescue\Helper\Formatter\JsonFormatter;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Rescue\Helper\Response\ResponseWrapper;
+use Rescue\Helper\Response\JsonResponse;
 use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\ServerRequestFactory;
 use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UriFactory;
-use Rescue\Http\MiddlewareInterface;
-use Rescue\Http\RequestHandlerInterface;
-use Rescue\Http\ResponseInterface;
-use Rescue\Http\ServerRequestInterface;
-use Rescue\Kernel\Exception\InvalidRequestHandler;
-use Rescue\Kernel\OutputResponse;
-use Rescue\Kernel\RequestHandler;
 use Rescue\Kernel\Server;
-use Rescue\Routing\Middleware\MiddlewareStorage;
-use Rescue\Routing\RouterItemStorage;
-use function get_class;
 
 final class ServerTest extends TestCase
 {
     /**
-     * @throws ReflectionException
+     * @var ServerRequestFactory
      */
-    public function testBase(): void
-    {
-        $streamFactory = new StreamFactory();
-        $responseFactory = new ResponseFactory($streamFactory);
-        $requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
-        $container = new Container();
-        $middlewareStorage = new MiddlewareStorage([$this->getRequestHandlerMiddleware()]);
-        $router = new RouterItemStorage($middlewareStorage, 'GET');
-        $request = $requestFactory->createServerRequest('GET', '/test');
-        $response = $responseFactory->createResponse();
-        $formatter = new JsonFormatter();
-
-        $handler = new class () extends RequestHandler
-        {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this->send('test message');
-            }
-        };
-
-        $handler->withResponse($response);
-
-        $router->get('/test', get_class($handler));
-        $router->get('/test2', get_class($handler));
-        $router->get('/test4', get_class($handler));
-        $router->get('/', get_class($handler));
-
-        $server = new Server($container, $request, $response, $router, $formatter);
-        $routerItem = $server->findRouterItem();
-        $response = $server->run($routerItem);
-
-        $output = (new OutputResponse())->output($response, false);
-
-        $this->assertEquals('"test message"', $output);
-    }
+    private $requestFactory;
 
     /**
-     * @throws ReflectionException
+     * @var ResponseWrapper
      */
-    public function testUrlWithParams(): void
-    {
-        $streamFactory = new StreamFactory();
-        $responseFactory = new ResponseFactory($streamFactory);
-        $requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
-        $request = $requestFactory->createServerRequest('GET', '/test/user/13');
-        $middlewareStorage = new MiddlewareStorage([$this->getRequestHandlerMiddleware()]);
-        $response = $responseFactory->createResponse();
-        $container = new Container();
-        $router = new RouterItemStorage($middlewareStorage, 'GET');
-        $formatter = new JsonFormatter();
-
-        $handler = new class () extends RequestHandler
-        {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this->send($request->getQueryParams());
-            }
-        };
-
-        $handler->withResponse($response);
-        $router->get('/test', get_class($handler));
-        $router->get('/test/{apiName}/{id}', get_class($handler));
-
-        $server = new Server($container, $request, $response, $router, $formatter);
-        $routerItem = $server->findRouterItem();
-        $response = $server->run($routerItem);
-
-        $this->assertEquals('{"apiName":"user","id":"13"}', (new OutputResponse())->output($response, false));
-    }
-
-    public function testRouterItemNotFound(): void
-    {
-        $streamFactory = new StreamFactory();
-        $responseFactory = new ResponseFactory($streamFactory);
-        $requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
-        $request = $requestFactory->createServerRequest('GET', '/');
-        $response = $responseFactory->createResponse();
-        $container = new Container();
-        $formatter = new JsonFormatter();
-        $middlewareStorage = new MiddlewareStorage([$this->getRequestHandlerMiddleware()]);
-        $router = new RouterItemStorage($middlewareStorage, 'GET');
-
-        $server = new Server($container, $request, $response, $router, $formatter);
-
-        $routerItem = $server->findRouterItem();
-        $this->assertNull($routerItem);
-    }
+    private $responseFactory;
 
     /**
-     * @throws ReflectionException
+     * @var JsonResponse
      */
-    public function testUnknownErrorMessage(): void
-    {
-        $handler = new class() extends RequestHandler
-        {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                if ($request->getMethod() === 'GET') {
-                    throw new InvalidArgumentException('unknown exception');
-                }
-
-                return $this->getResponse();
-            }
-        };
-
-        $streamFactory = new StreamFactory();
-        $responseFactory = new ResponseFactory($streamFactory);
-        $requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
-        $request = $requestFactory->createServerRequest('GET', '/');
-        $response = $responseFactory->createResponse();
-        $container = new Container();
-        $formatter = new JsonFormatter();
-        $middlewareStorage = new MiddlewareStorage([$this->getRequestHandlerMiddleware()]);
-        $router = new RouterItemStorage($middlewareStorage, 'GET');
-        $router->on('get', '/', get_class($handler));
-
-        $server = new Server($container, $request, $response, $router, $formatter);
-
-        $this->expectException(InvalidArgumentException::class);
-
-        $routerItem = $server->findRouterItem();
-        $server->run($routerItem);
-    }
-
+    private $responseFormat;
 
     /**
-     * @runInSeparateProcess
-     * @throws ReflectionException
+     * @inheritDoc
      */
-    public function testSendHeaders(): void
+    protected function setUp(): void
     {
+        parent::setUp();
+
         $streamFactory = new StreamFactory();
-        $responseFactory = new ResponseFactory($streamFactory);
-        $requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
-        $request = $requestFactory->createServerRequest('GET', '/test');
-        $response = $responseFactory->createResponse();
-        $container = new Container();
-        $formatter = new JsonFormatter();
-        $middlewareStorage = new MiddlewareStorage([$this->getRequestHandlerMiddleware()]);
-        $router = new RouterItemStorage($middlewareStorage, 'GET');
+        $this->requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
+        $this->responseFormat = new JsonResponse();
+        $this->responseFactory = new ResponseWrapper(
+            new ResponseFactory($streamFactory),
+            $streamFactory,
+            $this->responseFormat
+        );
+    }
 
-        $handler = new class () extends RequestHandler
-        {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this->send('test message');
-            }
-        };
+    public function testCli(): void
+    {
+        $request = $this->requestFactory->createServerRequest('GET', '/');
+        $handler = $this->getRequestHandler('hello world');
 
-        $handler->withResponseFormatter($formatter);
-        $handler->withResponse($response);
+        $server = new Server();
 
-        $router->get('/test', get_class($handler));
+        $this->expectOutputString('"hello world"');
 
-        $server = new Server($container, $request, $response, $router, $formatter);
-        $routerItem = $server->findRouterItem();
-        $response = $server->run($routerItem);
-
-        (new OutputResponse())->output($response);
-        $this->assertEquals(
-            ['Content-Type: application/json'], xdebug_get_headers()
+        $server->run(
+            $request,
+            $handler,
+            [$this->getRequestHandlerMiddleware()]
         );
     }
 
     /**
      * @runInSeparateProcess
-     * @throws ReflectionException
      */
-    public function testInvalidRequestHandler(): void
+    public function testWeb(): void
     {
-        $streamFactory = new StreamFactory();
-        $responseFactory = new ResponseFactory($streamFactory);
-        $requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
-        $request = $requestFactory->createServerRequest('GET', '/test');
-        $response = $responseFactory->createResponse();
-        $container = new Container();
-        $formatter = new JsonFormatter();
-        $middlewareStorage = new MiddlewareStorage([$this->getRequestHandlerMiddleware()]);
-        $router = new RouterItemStorage($middlewareStorage, 'GET');
+        $request = $this->requestFactory->createServerRequest('GET', '/');
+        $handler = $this->getRequestHandler(['test' => 1]);
 
-        $invalidHandler = new class ()
-        {
-        };
+        $server = $this
+            ->getMockBuilder(Server::class)
+            ->onlyMethods(['isCli'])
+            ->getMock();
 
-        $router->get('/test', get_class($invalidHandler));
+        $server->method('isCli')->willReturn(false);
 
-        $server = new Server($container, $request, $response, $router, $formatter);
+        $this->expectOutputString('{"test":1}');
 
-        $this->expectException(InvalidRequestHandler::class);
+        $server->run(
+            $request,
+            $handler,
+            [$this->getRequestHandlerMiddleware()]
+        );
 
-        $routerItem = $server->findRouterItem();
-        $server->run($routerItem);
+        $this->assertEquals(
+            [
+                'foo: bar',
+                'Content-Type: application/json',
+            ],
+            xdebug_get_headers()
+        );
     }
 
     private function getRequestHandlerMiddleware(): MiddlewareInterface
@@ -231,6 +108,36 @@ final class ServerTest extends TestCase
                 RequestHandlerInterface $handler
             ): ResponseInterface {
                 return $handler->handle($request);
+            }
+        };
+    }
+
+    private function getRequestHandler($message): RequestHandlerInterface
+    {
+        return new class ($message, $this->responseFactory) implements RequestHandlerInterface
+        {
+            /**
+             * @var mixed
+             */
+            private $message;
+
+            /**
+             * @var ResponseWrapper
+             */
+            private $response;
+
+            public function __construct($message, ResponseWrapper $response)
+            {
+                $this->message = $message;
+                $this->response = $response;
+            }
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return $this
+                    ->response
+                    ->response($this->message)
+                    ->withHeader('foo', 'bar');
             }
         };
     }

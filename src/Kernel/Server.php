@@ -1,123 +1,69 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rescue\Kernel;
 
-use ReflectionException;
-use Rescue\Container\ContainerInterface;
-use Rescue\Helper\Formatter\FormatterInterface;
-use Rescue\Http\RequestHandlerInterface;
-use Rescue\Http\ResponseInterface;
-use Rescue\Http\ServerRequestInterface;
-use Rescue\Kernel\Exception\InvalidRequestHandler;
-use Rescue\Routing\RouterItemInterface;
-use Rescue\Routing\RouterItemStorageInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Rescue\Helper\Response\JsonResponse;
+use Rescue\Helper\Response\ResponseFormatInterface;
 
 class Server
 {
     /**
-     * @var RouterItemStorageInterface
+     * @var ResponseFormatInterface
      */
-    private $router;
+    private $responseFormat;
+
+    public function __construct(ResponseFormatInterface $responseFormat = null)
+    {
+        $this->responseFormat = $responseFormat ?? new JsonResponse();
+    }
+
+    public function isCli(): bool
+    {
+        return PHP_SAPI === 'cli';
+    }
 
     /**
-     * @var ContainerInterface
+     * @param ServerRequestInterface $request
+     * @param RequestHandlerInterface $handler
+     * @param MiddlewareInterface[] $middlewares
      */
-    private $container;
-
-    /**
-     * @var ServerRequestInterface
-     */
-    private $request;
-
-    /**
-     * @var ResponseInterface
-     */
-    private $response;
-
-    /**
-     * @var FormatterInterface
-     */
-    private $formatter;
-
-    public function __construct(
-        ContainerInterface $container,
+    public function run(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        RouterItemStorageInterface $router,
-        FormatterInterface $formatter
-    ) {
-        $this->container = $container;
-        $this->request = $request;
-        $this->response = $response;
-        $this->router = $router;
-        $this->formatter = $formatter;
-    }
+        RequestHandlerInterface $handler,
+        array $middlewares = []
+    ): void {
+        $response = null;
 
-    /**
-     * @param RouterItemInterface $routerItem
-     * @return ResponseInterface
-     * @throws ReflectionException
-     */
-    public function run(RouterItemInterface $routerItem): ResponseInterface
-    {
-        $handlerInstance = $this->createRequestHandler($routerItem->getHandlerClass());
-
-        foreach ($routerItem->getMiddlewareStorage()->getMiddlewares() as $middleware) {
-            $this->response = $middleware->process($this->request, $handlerInstance);
-        }
-
-        return $this->response;
-    }
-
-    public function findRouterItem(): ?RouterItemInterface
-    {
-        $items = $this->router->getItems();
-
-        foreach ($items as $item) {
-            if (empty($item->getParamsNames()) && $item->getUri() === $this->request->getUri()->getPath()) {
-                return $item;
-            }
-
-            if (preg_match($item->getRegExUri(), $this->request->getUri()->getPath(), $matches) === 1) {
-                if (!empty($matches)) {
-                    array_shift($matches);
-
-                    $requestParams = $this->request->getQueryParams();
-
-                    foreach ($item->getParamsNames() as $key => $name) {
-                        $requestParams[$name] = $matches[$key] ?? null;
-                    }
-
-                    $this->request = $this->request->withQueryParams($requestParams);
-                }
-
-                return $item;
+        foreach ($middlewares as $middleware) {
+            if ($middleware instanceof MiddlewareInterface) {
+                $response = $middleware->process($request, $handler);
             }
         }
 
-        return null;
+        $this->outputResponse($response);
     }
 
     /**
-     * @param string $handlerClass
-     * @return RequestHandlerInterface
-     * @throws ReflectionException
-     * @throws InvalidRequestHandler
+     * @param ResponseInterface $response
      */
-    private function createRequestHandler(
-        string $handlerClass
-    ): RequestHandlerInterface {
-        $instance = $this->container->append($handlerClass);
+    private function outputResponse(ResponseInterface $response): void
+    {
+        if (!$this->isCli()) {
+            header("HTTP/{$response->getProtocolVersion()} {$response->getStatusCode()}");
 
-        if (!$instance instanceof RequestHandlerInterface) {
-            throw new InvalidRequestHandler("$handlerClass is not instance of " . RequestHandlerInterface::class);
+            foreach ($response->getHeaders() as $name => $headers) {
+                header($name . ': ' . $response->getHeaderLine($name));
+            }
+
+            header("Content-Type: {$this->responseFormat->getContentType()}");
         }
 
-        if ($instance instanceof RequestHandler) {
-            $instance->withResponse($this->response);
-            $instance->withResponseFormatter($this->formatter);
-        }
-
-        return $instance;
+        echo $response->getBody();
     }
 }
