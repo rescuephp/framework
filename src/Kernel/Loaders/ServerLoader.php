@@ -10,6 +10,7 @@ use ReflectionException;
 use Rescue\Container\ContainerInterface;
 use Rescue\Helper\Response\ResponseFormatInterface;
 use Rescue\Kernel\Bootstrap;
+use Rescue\Kernel\HttpNotFoundHandler;
 use Rescue\Kernel\LoaderInterface;
 use Rescue\Kernel\Server;
 use Rescue\Routing\RouterInterface;
@@ -74,12 +75,20 @@ class ServerLoader implements LoaderInterface
 
             $handler = $this->container->add($router->getHandlerClass());
 
-            $server->run(
-                $this->request,
-                $handler,
-                $this->instanceMiddlewares($middlewares)
+        } else {
+            $middlewares = array_merge(
+                $this->bootstrap->getMiddlewaresBefore(),
+                $this->bootstrap->getMiddlewaresAfter()
             );
+
+            $handler = $this->container->get(HttpNotFoundHandler::class);
         }
+
+        $server->run(
+            $this->request,
+            $handler,
+            $this->instanceMiddlewares($middlewares)
+        );
     }
 
     /**

@@ -6,10 +6,14 @@ namespace Rescue\Tests\Kernel;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionException;
 use Rescue\Container\Container;
 use Rescue\Helper\Response\JsonResponse;
@@ -20,6 +24,7 @@ use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UploadedFileFactory;
 use Rescue\Http\Factory\UriFactory;
 use Rescue\Kernel\Bootstrap;
+use Rescue\Kernel\HttpNotFoundHandler;
 use Rescue\Kernel\Loaders\RequestLoader;
 use Rescue\Kernel\Loaders\RouterStorageLoader;
 use Rescue\Kernel\Loaders\ServerLoader;
@@ -46,11 +51,42 @@ final class BootstrapTest extends TestCase
                 ServerRequestFactoryInterface::class => ServerRequestFactory::class,
 
                 ResponseFormatInterface::class => JsonResponse::class,
+                HttpNotFoundHandler::class => get_class($this->getHttpNotFoundHandler()),
+            ],
+            [
+                get_class($this->getRequestHandlerMiddleware()),
             ]
         );
 
         $bootstrap->bootstrap();
         $this->assertEmpty($bootstrap->getMiddlewaresAfter());
-        $this->assertEmpty($bootstrap->getMiddlewaresBefore());
+        $this->assertNotEmpty($bootstrap->getMiddlewaresBefore());
+    }
+
+    private function getHttpNotFoundHandler(): HttpNotFoundHandler
+    {
+        return new class() implements HttpNotFoundHandler
+        {
+            /**
+             * @inheritDoc
+             */
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return (new ResponseFactory(new StreamFactory()))->createResponse(404);
+            }
+        };
+    }
+
+    private function getRequestHandlerMiddleware(): MiddlewareInterface
+    {
+        return new class () implements MiddlewareInterface
+        {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
+                return $handler->handle($request);
+            }
+        };
     }
 }
