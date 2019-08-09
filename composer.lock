@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69edd5459f9daf067fbd2ca102a6cfef",
+    "content-hash": "34d52cecd389f271c9e690e756cb58ad",
     "packages": [
         {
             "name": "doctrine/instantiator",
@@ -813,6 +813,55 @@
             "time": "2019-08-03T15:41:47+00:00"
         },
         {
+            "name": "psr/container",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/container.git",
+                "reference": "b7ce3b176482dbbc1245ebf52b181af44c2cf55f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/container/zipball/b7ce3b176482dbbc1245ebf52b181af44c2cf55f",
+                "reference": "b7ce3b176482dbbc1245ebf52b181af44c2cf55f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Container\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common Container Interface (PHP FIG PSR-11)",
+            "homepage": "https://github.com/php-fig/container",
+            "keywords": [
+                "PSR-11",
+                "container",
+                "container-interface",
+                "container-interop",
+                "psr"
+            ],
+            "time": "2017-02-14T16:28:37+00:00"
+        },
+        {
             "name": "psr/http-factory",
             "version": "1.0.1",
             "source": {
@@ -1021,6 +1070,45 @@
             "time": "2018-10-30T17:12:04+00:00"
         },
         {
+            "name": "rescuephp/container",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rescuephp/container.git",
+                "reference": "5291f9508b4080b1892fbd084c2356bd1f768eab"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rescuephp/container/zipball/5291f9508b4080b1892fbd084c2356bd1f768eab",
+                "reference": "5291f9508b4080b1892fbd084c2356bd1f768eab",
+                "shasum": ""
+            },
+            "require": {
+                "psr/container": "^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Rescue\\Container\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Aleksey Ishutin",
+                    "email": "ishutin.alexey@gmail.com"
+                }
+            ],
+            "description": "Dependency Injection Container library",
+            "time": "2019-08-07T10:48:25+00:00"
+        },
+        {
             "name": "rescuephp/http",
             "version": "1.0.3",
             "source": {
@@ -1058,6 +1146,46 @@
             ],
             "description": "Rescue HTTP library",
             "time": "2019-08-07T00:19:50+00:00"
+        },
+        {
+            "name": "rescuephp/routing",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rescuephp/routing.git",
+                "reference": "7a23ed9ceb69f5dbf795b34534c772bb6931cde3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rescuephp/routing/zipball/7a23ed9ceb69f5dbf795b34534c772bb6931cde3",
+                "reference": "7a23ed9ceb69f5dbf795b34534c772bb6931cde3",
+                "shasum": ""
+            },
+            "require": {
+                "fig/http-message-util": "^1.1",
+                "psr/http-server-middleware": "^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Rescue\\Routing\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Aleksey Ishutin",
+                    "email": "ishutin.alexey@gmail.com"
+                }
+            ],
+            "description": "Routing library",
+            "time": "2019-08-08T14:54:15+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
