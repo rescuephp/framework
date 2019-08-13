@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use ReflectionException;
 use Rescue\Container\ContainerInterface;
 use Rescue\Helper\Json\Exception\DecodeException;
 use Rescue\Http\Factory\ServerRequestFactory;
@@ -33,6 +34,7 @@ class RequestLoader implements LoaderInterface
 
     /**
      * @throws DecodeException
+     * @throws ReflectionException
      */
     public function load(): void
     {
@@ -63,7 +65,7 @@ class RequestLoader implements LoaderInterface
             $request = $request->withUploadedFiles($this->parseFiles());
         }
 
-        $this->container->addInstance(ServerRequestInterface::class, $request);
+        $this->container->add(ServerRequestInterface::class, $request);
     }
 
     /**

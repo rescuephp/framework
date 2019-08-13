@@ -41,6 +41,8 @@ class Bootstrap
      * @param array $defaultClasses
      * @param string[] $middlewaresBefore
      * @param string[] $middlewaresAfter
+     *
+     * @throws ReflectionException
      */
     public function __construct(
         ContainerInterface $container,
@@ -50,7 +52,7 @@ class Bootstrap
         array $middlewaresAfter = []
     ) {
         $this->container = $container;
-        $this->container->addInstance(ContainerInterface::class, $this->container);
+        $this->container->add(ContainerInterface::class, $this->container);
         $this->loaders = $loaders;
         $this->defaultClasses = $defaultClasses;
         $this->middlewaresBefore = $middlewaresBefore;
@@ -72,7 +74,7 @@ class Bootstrap
      */
     public function bootstrap(): void
     {
-        $this->container->addInstance(__CLASS__, $this);
+        $this->container->add(__CLASS__, $this);
         $this->registerDefault();
         $this->dispatchLoaders();
     }

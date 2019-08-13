@@ -17,11 +17,11 @@
         "psr/http-message": "^1.0",
         "psr/http-server-middleware": "^1.0",
         "rescuephp/container": "^1.0",
-        "rescuephp/routing": "^1.0"
+        "rescuephp/routing": "^1.0",
+        "psr/http-factory": "^1.0"
     },
     "require-dev": {
         "ext-xdebug": "*",
-        "psr/http-factory": "^1.0",
         "phpunit/phpunit": "^8.1"
     },
     "autoload": {
