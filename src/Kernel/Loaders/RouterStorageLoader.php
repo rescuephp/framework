@@ -44,6 +44,6 @@ class RouterStorageLoader implements LoaderInterface
             $this->request->getUri()->getPath()
         );
 
-        $this->container->add(RouterStorageInterface::class, $routerStorage);
+        $this->container->addByInstance(RouterStorageInterface::class, $routerStorage);
     }
 }

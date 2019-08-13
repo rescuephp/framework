@@ -1071,16 +1071,16 @@
         },
         {
             "name": "rescuephp/container",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rescuephp/container.git",
-                "reference": "d796a083442b43742d3811a7b36be6bacc62b7ef"
+                "reference": "55efd50c18e582ec15038769487aeb1981e64ba8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rescuephp/container/zipball/d796a083442b43742d3811a7b36be6bacc62b7ef",
-                "reference": "d796a083442b43742d3811a7b36be6bacc62b7ef",
+                "url": "https://api.github.com/repos/rescuephp/container/zipball/55efd50c18e582ec15038769487aeb1981e64ba8",
+                "reference": "55efd50c18e582ec15038769487aeb1981e64ba8",
                 "shasum": ""
             },
             "require": {
@@ -1106,7 +1106,7 @@
                 }
             ],
             "description": "Dependency Injection Container library",
-            "time": "2019-08-13T23:12:21+00:00"
+            "time": "2019-08-13T23:31:35+00:00"
         },
         {
             "name": "rescuephp/http",

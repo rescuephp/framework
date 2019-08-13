@@ -52,7 +52,7 @@ class Bootstrap
         array $middlewaresAfter = []
     ) {
         $this->container = $container;
-        $this->container->add(ContainerInterface::class, $this->container);
+        $this->container->addByInstance(ContainerInterface::class, $this->container);
         $this->loaders = $loaders;
         $this->defaultClasses = $defaultClasses;
         $this->middlewaresBefore = $middlewaresBefore;
@@ -74,7 +74,7 @@ class Bootstrap
      */
     public function bootstrap(): void
     {
-        $this->container->add(__CLASS__, $this);
+        $this->container->addByInstance(__CLASS__, $this);
         $this->registerDefault();
         $this->dispatchLoaders();
     }

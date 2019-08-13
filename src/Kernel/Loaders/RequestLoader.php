@@ -65,7 +65,7 @@ class RequestLoader implements LoaderInterface
             $request = $request->withUploadedFiles($this->parseFiles());
         }
 
-        $this->container->add(ServerRequestInterface::class, $request);
+        $this->container->addByInstance(ServerRequestInterface::class, $request);
     }
 
     /**
