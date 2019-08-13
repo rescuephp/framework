@@ -5,6 +5,7 @@
 [![Total Downloads](https://poser.pugx.org/rescuephp/framework/downloads)](https://packagist.org/packages/rescuephp/framework)
 [![Build](https://travis-ci.com/rescuephp/framework.svg?branch=master)](https://travis-ci.com/rescuephp/framework)
 [![codecov](https://codecov.io/gh/rescuephp/framework/branch/master/graph/badge.svg)](https://codecov.io/gh/rescuephp/framework)
+[![scrutinizer](https://scrutinizer-ci.com/g/rescuephp/framework/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/rescuephp/framework/)
 
 RescuePHP framework
 
