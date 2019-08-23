@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Rescue\Kernel\Loaders;
 
-
 use Psr\Http\Message\ServerRequestInterface;
-use ReflectionException;
 use Rescue\Container\ContainerInterface;
 use Rescue\Kernel\LoaderInterface;
 use Rescue\Routing\Middleware\MiddlewareStorage;
@@ -31,9 +29,6 @@ class RouterStorageLoader implements LoaderInterface
         $this->container = $container;
     }
 
-    /**
-     * @throws ReflectionException
-     */
     public function load(): void
     {
         $middlewareStorage = new MiddlewareStorage();

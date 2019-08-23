@@ -41,8 +41,6 @@ class Bootstrap
      * @param array $defaultClasses
      * @param string[] $middlewaresBefore
      * @param string[] $middlewaresAfter
-     *
-     * @throws ReflectionException
      */
     public function __construct(
         ContainerInterface $container,
@@ -100,5 +98,4 @@ class Bootstrap
             $loader->load();
         }
     }
-
 }

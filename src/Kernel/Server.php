@@ -58,7 +58,7 @@ class Server
             header("HTTP/{$response->getProtocolVersion()} {$response->getStatusCode()}");
 
             foreach ($response->getHeaders() as $name => $headers) {
-                header($name . ': ' . $response->getHeaderLine($name));
+                header("$name: {$response->getHeaderLine($name)}");
             }
 
             header("Content-Type: {$this->responseFormat->getContentType()}");

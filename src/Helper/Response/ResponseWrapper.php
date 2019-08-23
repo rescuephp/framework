@@ -42,8 +42,10 @@ class ResponseWrapper
      * @return ResponseInterface
      * @throws Exception\ResponseFormatException
      */
-    public function response($message, int $code = StatusCodeInterface::STATUS_OK): ResponseInterface
-    {
+    public function response(
+        $message,
+        int $code = StatusCodeInterface::STATUS_OK
+    ): ResponseInterface {
         $response = $this->responseFactory->createResponse($code);
 
         $stream = $this->streamFactory->createStream(

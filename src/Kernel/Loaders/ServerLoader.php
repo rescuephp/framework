@@ -74,7 +74,6 @@ class ServerLoader implements LoaderInterface
             );
 
             $handler = $this->container->add($router->getHandlerClass());
-
         } else {
             $middlewares = array_merge(
                 $this->bootstrap->getMiddlewaresBefore(),
