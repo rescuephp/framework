@@ -1149,16 +1149,16 @@
         },
         {
             "name": "rescuephp/routing",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rescuephp/routing.git",
-                "reference": "7a23ed9ceb69f5dbf795b34534c772bb6931cde3"
+                "reference": "a031946eb0b3fee0b7afc863ed57733d3287452f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rescuephp/routing/zipball/7a23ed9ceb69f5dbf795b34534c772bb6931cde3",
-                "reference": "7a23ed9ceb69f5dbf795b34534c772bb6931cde3",
+                "url": "https://api.github.com/repos/rescuephp/routing/zipball/a031946eb0b3fee0b7afc863ed57733d3287452f",
+                "reference": "a031946eb0b3fee0b7afc863ed57733d3287452f",
                 "shasum": ""
             },
             "require": {
@@ -1185,7 +1185,7 @@
                 }
             ],
             "description": "Routing library",
-            "time": "2019-08-08T14:54:15+00:00"
+            "time": "2019-08-23T11:54:07+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
