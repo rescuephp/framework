@@ -8,8 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Rescue\Helper\Response\JsonResponse;
-use Rescue\Helper\Response\ResponseFormatInterface;
+use Rescue\Response\JsonResponse;
+use Rescue\Response\ResponseFormatInterface;
 
 class Server
 {

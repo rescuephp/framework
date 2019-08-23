@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Rescue\Helper\Response;
+namespace Rescue\Response;
 
-use Rescue\Helper\Response\Exception\ResponseFormatException;
+use Rescue\Response\Exception\ResponseFormatException;
 
 interface ResponseFormatInterface
 {

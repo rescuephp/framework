@@ -9,13 +9,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Rescue\Helper\Response\JsonResponse;
-use Rescue\Helper\Response\ResponseWrapper;
 use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\ServerRequestFactory;
 use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UriFactory;
 use Rescue\Kernel\Server;
+use Rescue\Response\JsonResponse;
+use Rescue\Response\ResponseWrapper;
 
 final class ServerTest extends TestCase
 {

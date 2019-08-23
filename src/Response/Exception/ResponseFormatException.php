@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rescue\Helper\Response\Exception;
+namespace Rescue\Response\Exception;
 
 use Throwable;
 

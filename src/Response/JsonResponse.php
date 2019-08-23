@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Rescue\Helper\Response;
+namespace Rescue\Response;
 
 use Rescue\Helper\Json\Exception\EncodeException;
-use Rescue\Helper\Response\Exception\FormatException;
+use Rescue\Response\Exception\FormatException;
 
 class JsonResponse implements ResponseFormatInterface
 {

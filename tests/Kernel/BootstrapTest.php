@@ -16,8 +16,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionException;
 use Rescue\Container\Container;
-use Rescue\Helper\Response\JsonResponse;
-use Rescue\Helper\Response\ResponseFormatInterface;
 use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\ServerRequestFactory;
 use Rescue\Http\Factory\StreamFactory;
@@ -28,6 +26,8 @@ use Rescue\Kernel\HttpNotFoundHandler;
 use Rescue\Kernel\Loaders\RequestLoader;
 use Rescue\Kernel\Loaders\RouterStorageLoader;
 use Rescue\Kernel\Loaders\ServerLoader;
+use Rescue\Response\JsonResponse;
+use Rescue\Response\ResponseFormatInterface;
 
 final class BootstrapTest extends TestCase
 {

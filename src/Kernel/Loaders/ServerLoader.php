@@ -8,11 +8,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use ReflectionException;
 use Rescue\Container\ContainerInterface;
-use Rescue\Helper\Response\ResponseFormatInterface;
 use Rescue\Kernel\Bootstrap;
 use Rescue\Kernel\HttpNotFoundHandler;
 use Rescue\Kernel\LoaderInterface;
 use Rescue\Kernel\Server;
+use Rescue\Request\RequestHandler;
+use Rescue\Response\ResponseFormatInterface;
+use Rescue\Response\ResponseWrapperInterface;
 use Rescue\Routing\RouterInterface;
 use Rescue\Routing\RouterStorageInterface;
 
@@ -81,6 +83,12 @@ class ServerLoader implements LoaderInterface
             );
 
             $handler = $this->container->get(HttpNotFoundHandler::class);
+        }
+
+        if ($handler instanceof RequestHandler) {
+            /** @var ResponseWrapperInterface $wrapper */
+            $wrapper = $this->container->get(ResponseWrapperInterface::class);
+            $handler->withWrapper($wrapper);
         }
 
         $server->run(

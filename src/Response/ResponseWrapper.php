@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Rescue\Helper\Response;
+namespace Rescue\Response;
 
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 
-class ResponseWrapper
+class ResponseWrapper implements ResponseWrapperInterface
 {
     /**
      * @var ResponseFactoryInterface
@@ -37,10 +37,7 @@ class ResponseWrapper
     }
 
     /**
-     * @param mixed $message
-     * @param int $code
-     * @return ResponseInterface
-     * @throws Exception\ResponseFormatException
+     * @inheritDoc
      */
     public function response(
         $message,
