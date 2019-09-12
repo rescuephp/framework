@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Rescue\Request;
+namespace Rescue\Http;
 
-use Fig\Http\Message\StatusCodeInterface;
+use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Rescue\Response\Exception\ResponseFormatException;
-use Rescue\Response\ResponseWrapperInterface;
 
 abstract class RequestHandler implements RequestHandlerInterface
 {
@@ -28,9 +26,8 @@ abstract class RequestHandler implements RequestHandlerInterface
      * @param mixed $message
      * @param int $code
      * @return ResponseInterface
-     * @throws ResponseFormatException
      */
-    public function response($message, int $code = StatusCodeInterface::STATUS_OK): ResponseInterface
+    protected function response($message, int $code = StatusCode::STATUS_OK): ResponseInterface
     {
         return $this->wrapper->response($message, $code);
     }

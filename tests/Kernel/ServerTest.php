@@ -4,141 +4,173 @@ declare(strict_types=1);
 
 namespace Rescue\Tests\Kernel;
 
+use Generator;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionException;
+use Rescue\Container\Container;
 use Rescue\Http\Factory\ResponseFactory;
-use Rescue\Http\Factory\ServerRequestFactory;
 use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UriFactory;
 use Rescue\Kernel\Server;
-use Rescue\Response\JsonResponse;
-use Rescue\Response\ResponseWrapper;
 
 final class ServerTest extends TestCase
 {
     /**
-     * @var ServerRequestFactory
+     * @throws ReflectionException
      */
-    private $requestFactory;
-
-    /**
-     * @var ResponseWrapper
-     */
-    private $responseFactory;
-
-    /**
-     * @var JsonResponse
-     */
-    private $responseFormat;
-
-    /**
-     * @inheritDoc
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $streamFactory = new StreamFactory();
-        $this->requestFactory = new ServerRequestFactory(new UriFactory(), $streamFactory);
-        $this->responseFormat = new JsonResponse();
-        $this->responseFactory = new ResponseWrapper(
-            new ResponseFactory($streamFactory),
-            $streamFactory,
-            $this->responseFormat
-        );
-    }
-
     public function testCli(): void
     {
-        $request = $this->requestFactory->createServerRequest('GET', '/');
-        $handler = $this->getRequestHandler('hello world');
-
-        $server = new Server();
-
-        $this->expectOutputString('"hello world"');
-
-        $server->run(
-            $request,
-            $handler,
-            [$this->getRequestHandlerMiddleware()]
-        );
+        $server = new Server($this->fallbackHandler());
+        $this->expectOutputString('Not Found');
+        $server->run();
     }
 
     /**
+     * @throws ReflectionException
      * @runInSeparateProcess
      */
     public function testWeb(): void
     {
-        $request = $this->requestFactory->createServerRequest('GET', '/');
-        $handler = $this->getRequestHandler(['test' => 1]);
-
         $server = $this
             ->getMockBuilder(Server::class)
+            ->setConstructorArgs([$this->fallbackHandler()])
             ->onlyMethods(['isCli'])
             ->getMock();
 
         $server->method('isCli')->willReturn(false);
 
-        $this->expectOutputString('{"test":1}');
+        $this->expectOutputString('Not Found');
 
-        $server->run(
-            $request,
-            $handler,
-            [$this->getRequestHandlerMiddleware()]
-        );
+        $server->run();
 
-        $this->assertEquals(
-            [
-                'foo: bar',
-                'Content-Type: application/json',
-            ],
-            xdebug_get_headers()
-        );
+        $this->assertEquals(['foo: bar'], xdebug_get_headers());
     }
 
-    private function getRequestHandlerMiddleware(): MiddlewareInterface
+    /**
+     * @throws ReflectionException
+     */
+    public function testDispatcherMethod(): void
     {
-        return new class () implements MiddlewareInterface
+        $server = new Server($this->fallbackHandler());
+        $middleware = $this->getMiddleware('bar');
+
+        $server->getMiddlewareDispatcher()->add($middleware);
+        $this->expectOutputString('bar');
+        $server->run();
+    }
+
+    /**
+     * @param array $middlewares
+     * @param string $result
+     * @throws ReflectionException
+     * @dataProvider middlewaresProvider
+     */
+    public function testMiddlewaresConstructor($middlewares, string $result): void
+    {
+        $server = new Server($this->fallbackHandler(), null, $middlewares);
+
+        $this->expectOutputString($result);
+        $server->run();
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testRegisterDefaultClasses(): void
+    {
+        $container = new Container();
+
+        $testClass = $this->fallbackHandler();
+
+        $server = new Server($this->fallbackHandler(), $container, [], [
+            StreamFactoryInterface::class => StreamFactory::class,
+            UriFactoryInterface::class => UriFactory::class,
+            'test' => get_class($testClass),
+        ]);
+
+        $server->run();
+
+        $this->assertTrue($container->has(StreamFactoryInterface::class));
+        $this->assertTrue($container->has(UriFactoryInterface::class));
+        $this->assertTrue($container->has(ServerRequestFactoryInterface::class));
+        $this->assertTrue($container->has('test'));
+        $this->assertInstanceOf(get_class($testClass), $container->get('test'));
+    }
+
+    public function middlewaresProvider(): Generator
+    {
+        yield [
+            'middlewares' => [$this->getMiddleware('foo')],
+            'result' => 'foo',
+        ];
+
+        yield [
+            'middlewares' => [TestMiddleware::class],
+            'result' => 'TEST',
+        ];
+
+        yield [
+            'middlewares' => [self::class],
+            'result' => 'Not Found',
+        ];
+    }
+
+    private function fallbackHandler(): RequestHandlerInterface
+    {
+        return new class implements RequestHandlerInterface
         {
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $response = (new ResponseFactory(new StreamFactory()))->createResponse(404);
+                $response->getBody()->write('Not Found');
+                $response = $response->withHeader('foo', 'bar');
+
+                return $response;
+            }
+        };
+    }
+
+    private function getMiddleware(string $response): MiddlewareInterface
+    {
+        return new class ($response) implements MiddlewareInterface
+        {
+            /**
+             * @var string
+             */
+            private $response;
+
+            public function __construct(string $response)
+            {
+                $this->response = $response;
+            }
+
             public function process(
                 ServerRequestInterface $request,
                 RequestHandlerInterface $handler
             ): ResponseInterface {
-                return $handler->handle($request);
+                $response = (new ResponseFactory(new StreamFactory()))->createResponse(200);
+                $response->getBody()->write($this->response);
+
+                return $response;
             }
         };
     }
+}
 
-    private function getRequestHandler($message): RequestHandlerInterface
+class TestMiddleware implements MiddlewareInterface
+{
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        return new class ($message, $this->responseFactory) implements RequestHandlerInterface
-        {
-            /**
-             * @var mixed
-             */
-            private $message;
+        $response = (new ResponseFactory(new StreamFactory()))->createResponse(200);
+        $response->getBody()->write('TEST');
 
-            /**
-             * @var ResponseWrapper
-             */
-            private $response;
-
-            public function __construct($message, ResponseWrapper $response)
-            {
-                $this->message = $message;
-                $this->response = $response;
-            }
-
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this
-                    ->response
-                    ->response($this->message)
-                    ->withHeader('foo', 'bar');
-            }
-        };
+        return $response;
     }
 }
