@@ -13,36 +13,41 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use ReflectionException;
 use Rescue\Container\Container;
 use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UriFactory;
+use Rescue\Http\FallbackHandlerInterface;
 use Rescue\Kernel\BootstrapInterface;
+use Rescue\Kernel\Exception\KernelException;
+use Rescue\Kernel\Resolver;
 use Rescue\Kernel\Server;
 use RuntimeException;
 
 final class ServerTest extends TestCase
 {
     /**
-     * @throws ReflectionException
+     * @throws KernelException
      */
     public function testCli(): void
     {
-        $server = new Server($this->fallbackHandler());
+        $resolver = new Resolver(null, $this->getDefaultClasses());
+        $server = new Server($resolver);
+
         $this->expectOutputString('Not Found');
         $server->run();
     }
 
     /**
-     * @throws ReflectionException
+     * @throws KernelException
      * @runInSeparateProcess
      */
     public function testWeb(): void
     {
+        $resolver = new Resolver(null, $this->getDefaultClasses());
         $server = $this
             ->getMockBuilder(Server::class)
-            ->setConstructorArgs([$this->fallbackHandler()])
+            ->setConstructorArgs([$resolver])
             ->onlyMethods(['isCli'])
             ->getMock();
 
@@ -56,14 +61,14 @@ final class ServerTest extends TestCase
     }
 
     /**
-     * @throws ReflectionException
+     * @throws KernelException
      */
     public function testDispatcherMethod(): void
     {
-        $server = new Server($this->fallbackHandler());
+        $resolver = new Resolver(null, $this->getDefaultClasses());
         $middleware = $this->getMiddleware('bar');
-
-        $server->getMiddlewareDispatcher()->add($middleware);
+        $resolver->getMiddlewareDispatcher()->add($middleware);
+        $server = new Server($resolver);
         $this->expectOutputString('bar');
         $server->run();
     }
@@ -71,31 +76,38 @@ final class ServerTest extends TestCase
     /**
      * @param array $middlewares
      * @param string $result
-     * @throws ReflectionException
+     * @throws KernelException
      * @dataProvider middlewaresProvider
      */
     public function testMiddlewaresConstructor($middlewares, string $result): void
     {
-        $server = new Server($this->fallbackHandler(), null, $middlewares);
+        $resolver = new Resolver(null, $this->getDefaultClasses(), $middlewares);
+        $server = new Server($resolver);
 
         $this->expectOutputString($result);
         $server->run();
     }
 
     /**
-     * @throws ReflectionException
+     * @throws KernelException
      */
     public function testRegisterDefaultClasses(): void
     {
         $container = new Container();
+        $testClass = $this->getFallbackHandler();
+        $resolver = new Resolver($container,
+            array_merge(
+                $this->getDefaultClasses(),
+                [
+                    StreamFactoryInterface::class => StreamFactory::class,
+                    UriFactoryInterface::class => UriFactory::class,
+                    'test' => get_class($testClass),
+                ]
+            )
+        );
 
-        $testClass = $this->fallbackHandler();
 
-        $server = new Server($this->fallbackHandler(), $container, [], [
-            StreamFactoryInterface::class => StreamFactory::class,
-            UriFactoryInterface::class => UriFactory::class,
-            'test' => get_class($testClass),
-        ]);
+        $server = new Server($resolver);
 
         $this->expectOutputString('Not Found');
 
@@ -111,12 +123,13 @@ final class ServerTest extends TestCase
     /**
      * @param mixed $bootstrap
      * @param string|null $exception
-     * @throws ReflectionException
+     * @throws KernelException
      * @dataProvider bootstrapProvider
      */
     public function testBootstrap($bootstrap, string $exception = null): void
     {
-        $server = new Server($this->fallbackHandler(), null, [], [], $bootstrap);
+        $resolver = new Resolver(null, $this->getDefaultClasses(), [], $bootstrap);
+        $server = new Server($resolver);
 
         if ($exception === null) {
             $this->assertTrue(true);
@@ -171,13 +184,21 @@ final class ServerTest extends TestCase
         ];
     }
 
-    private function fallbackHandler(): RequestHandlerInterface
+    private function getDefaultClasses(): array
     {
-        return new class implements RequestHandlerInterface
+        return [
+            FallbackHandlerInterface::class => get_class($this->getFallbackHandler()),
+        ];
+    }
+
+    private function getFallbackHandler(): FallbackHandlerInterface
+    {
+        return new class implements FallbackHandlerInterface
         {
             public function handle(ServerRequestInterface $request): ResponseInterface
             {
-                $response = (new ResponseFactory(new StreamFactory()))->createResponse(404);
+                $response = (new ResponseFactory(new StreamFactory()))
+                    ->createResponse(404);
                 $response->getBody()->write('Not Found');
                 $response = $response->withHeader('foo', 'bar');
 
@@ -204,7 +225,8 @@ final class ServerTest extends TestCase
                 ServerRequestInterface $request,
                 RequestHandlerInterface $handler
             ): ResponseInterface {
-                $response = (new ResponseFactory(new StreamFactory()))->createResponse(200);
+                $response = (new ResponseFactory(new StreamFactory()))
+                    ->createResponse(200);
                 $response->getBody()->write($this->response);
 
                 return $response;
