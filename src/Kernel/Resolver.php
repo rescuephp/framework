@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Rescue\Kernel;
 
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -13,6 +12,7 @@ use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use ReflectionException;
 use Rescue\Container\Container;
+use Rescue\Container\ContainerInterface;
 use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\ServerRequestFactory;
 use Rescue\Http\Factory\StreamFactory;
@@ -37,7 +37,7 @@ class Resolver
     ];
 
     /**
-     * @var ContainerInterface|Container|null
+     * @var ContainerInterface
      */
     private $container;
 
@@ -92,9 +92,6 @@ class Resolver
         return $this->bootstrapDispatcher;
     }
 
-    /**
-     * @return ContainerInterface|Container
-     */
     public function getContainer(): ContainerInterface
     {
         return $this->container;
