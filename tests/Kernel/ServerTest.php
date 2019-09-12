@@ -18,7 +18,9 @@ use Rescue\Container\Container;
 use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UriFactory;
+use Rescue\Kernel\BootstrapInterface;
 use Rescue\Kernel\Server;
+use RuntimeException;
 
 final class ServerTest extends TestCase
 {
@@ -95,6 +97,8 @@ final class ServerTest extends TestCase
             'test' => get_class($testClass),
         ]);
 
+        $this->expectOutputString('Not Found');
+
         $server->run();
 
         $this->assertTrue($container->has(StreamFactoryInterface::class));
@@ -102,6 +106,51 @@ final class ServerTest extends TestCase
         $this->assertTrue($container->has(ServerRequestFactoryInterface::class));
         $this->assertTrue($container->has('test'));
         $this->assertInstanceOf(get_class($testClass), $container->get('test'));
+    }
+
+    /**
+     * @param mixed $bootstrap
+     * @param string|null $exception
+     * @throws ReflectionException
+     * @dataProvider bootstrapProvider
+     */
+    public function testBootstrap($bootstrap, string $exception = null): void
+    {
+        $server = new Server($this->fallbackHandler(), null, [], [], $bootstrap);
+
+        if ($exception === null) {
+            $this->assertTrue(true);
+        } else {
+            $this->expectExceptionMessage($exception);
+        }
+
+        $server->run();
+    }
+
+    public function bootstrapProvider(): Generator
+    {
+        yield [
+            'bootstrap' => [
+                new class implements BootstrapInterface
+                {
+                    public function setUp(): void
+                    {
+                        throw new RuntimeException('testing');
+                    }
+                },
+            ],
+            'exception' => 'testing',
+        ];
+
+        yield [
+            'middlewares' => [TestBootstrap::class],
+            'exception' => 'foo',
+        ];
+
+        yield [
+            'middlewares' => [TestMiddleware::class],
+            'exception' => null,
+        ];
     }
 
     public function middlewaresProvider(): Generator
@@ -172,5 +221,13 @@ class TestMiddleware implements MiddlewareInterface
         $response->getBody()->write('TEST');
 
         return $response;
+    }
+}
+
+class TestBootstrap implements BootstrapInterface
+{
+    public function setUp(): void
+    {
+        throw new RuntimeException('foo');
     }
 }

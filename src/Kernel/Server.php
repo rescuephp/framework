@@ -44,7 +44,7 @@ class Server
     /**
      * @var Dispatcher
      */
-    private $dispatcher;
+    private $middlewareDispatcher;
 
     /**
      * @var array|MiddlewareInterface[]|string[]
@@ -57,22 +57,36 @@ class Server
     private $defaultClasses;
 
     /**
+     * @var BootstrapDispatcher
+     */
+    private $bootDispatcher;
+
+    /**
+     * @var string[]|BootstrapInterface[]
+     */
+    private $bootstrap;
+
+    /**
      * Server constructor.
      * @param RequestHandlerInterface $fallbackHandler
      * @param ContainerInterface $container
      * @param string[]|MiddlewareInterface[] $middlewares
      * @param array $defaultClasses
+     * @param string[]|BootstrapInterface[] $bootstrap
      */
     public function __construct(
         RequestHandlerInterface $fallbackHandler,
         ContainerInterface $container = null,
         array $middlewares = [],
-        array $defaultClasses = []
+        array $defaultClasses = [],
+        array $bootstrap = []
     ) {
         $this->container = $container ?? new Container();
-        $this->dispatcher = new Dispatcher($fallbackHandler);
+        $this->middlewareDispatcher = new Dispatcher($fallbackHandler);
         $this->middlewares = $middlewares;
         $this->defaultClasses = $defaultClasses;
+        $this->bootDispatcher = new BootstrapDispatcher();
+        $this->bootstrap = $bootstrap;
     }
 
     /**
@@ -82,11 +96,13 @@ class Server
     {
         $this->registerMiddlewares($this->middlewares);
         $this->registerDefaultClasses($this->defaultClasses);
+        $this->registerBootstrap($this->bootstrap);
 
         $request = $this->createRequest();
         $this->createRouterStorage($request);
+        $this->bootDispatcher->dispatch();
 
-        $response = $this->dispatcher->handle($request);
+        $response = $this->middlewareDispatcher->handle($request);
 
         $this->outputResponse($response);
     }
@@ -98,7 +114,7 @@ class Server
 
     public function getMiddlewareDispatcher(): Dispatcher
     {
-        return $this->dispatcher;
+        return $this->middlewareDispatcher;
     }
 
     /**
@@ -132,7 +148,7 @@ class Server
                 continue;
             }
 
-            $this->dispatcher->add($middleware);
+            $this->middlewareDispatcher->add($middleware);
         }
     }
 
@@ -173,8 +189,9 @@ class Server
         return $request;
     }
 
-    private function createRouterStorage(ServerRequestInterface $request): RouterStorageInterface
-    {
+    private function createRouterStorage(
+        ServerRequestInterface $request
+    ): RouterStorageInterface {
         $middlewareStorage = new MiddlewareStorage();
 
         $routerStorage = new RouterStorage(
@@ -186,5 +203,24 @@ class Server
         $this->container->addByInstance(RouterStorageInterface::class, $routerStorage);
 
         return $routerStorage;
+    }
+
+    /**
+     * @param array $bootstrap
+     * @throws ReflectionException
+     */
+    private function registerBootstrap(array $bootstrap): void
+    {
+        foreach ($bootstrap as $item) {
+            if (is_string($item)) {
+                $item = $this->container->add($item);
+            }
+
+            if (!$item instanceof BootstrapInterface) {
+                continue;
+            }
+
+            $this->bootDispatcher->add($item);
+        }
     }
 }
