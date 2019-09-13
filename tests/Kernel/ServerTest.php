@@ -133,7 +133,9 @@ final class ServerTest extends TestCase
 
         if ($exception === null) {
             $this->assertTrue(true);
+            $this->expectOutputString('Not Found');
         } else {
+            $this->expectOutputString('');
             $this->expectExceptionMessage($exception);
         }
 

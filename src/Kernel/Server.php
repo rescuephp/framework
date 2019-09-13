@@ -5,11 +5,6 @@ declare(strict_types=1);
 namespace Rescue\Kernel;
 
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestFactoryInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Rescue\Routing\Middleware\MiddlewareStorage;
-use Rescue\Routing\RouterStorage;
-use Rescue\Routing\RouterStorageInterface;
 
 class Server
 {
@@ -25,9 +20,9 @@ class Server
 
     public function run(): void
     {
-        $request = $this->createRequest();
-        $this->createRouterStorage($request);
         $this->resolver->getBootstrapDispatcher()->dispatch();
+
+        $request = $this->resolver->getRequest();
         $response = $this->resolver->getMiddlewareDispatcher()->handle($request);
 
         $this->outputResponse($response);
@@ -54,40 +49,4 @@ class Server
         echo (string)$response->getBody();
     }
 
-    private function createRequest(): ServerRequestInterface
-    {
-        /** @var ServerRequestFactoryInterface $requestFactory */
-        $requestFactory = $this->resolver->getContainer()
-            ->get(ServerRequestFactoryInterface::class);
-
-        $request = $requestFactory
-            ->createServerRequest(
-                $_SERVER['REQUEST_METHOD'] ?? 'GET',
-                $_SERVER['REQUEST_URI'] ?? '/',
-                $_SERVER ?? []
-            )
-            ->withQueryParams($_GET ?? []);
-
-        $this->resolver->getContainer()
-            ->addByInstance(ServerRequestInterface::class, $request);
-
-        return $request;
-    }
-
-    private function createRouterStorage(
-        ServerRequestInterface $request
-    ): RouterStorageInterface {
-        $middlewareStorage = new MiddlewareStorage();
-
-        $routerStorage = new RouterStorage(
-            $middlewareStorage,
-            $request->getMethod(),
-            $request->getUri()->getPath()
-        );
-
-        $this->resolver->getContainer()
-            ->addByInstance(RouterStorageInterface::class, $routerStorage);
-
-        return $routerStorage;
-    }
 }

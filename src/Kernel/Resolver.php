@@ -6,6 +6,7 @@ namespace Rescue\Kernel;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
@@ -62,6 +63,7 @@ class Resolver
     ) {
         $this->container = $container ?? new Container();
         $this->bootstrapDispatcher = new BootstrapDispatcher();
+        $this->container->addByInstance(ContainerInterface::class, $this->container);
 
         try {
             $this->registerDefaultClasses(
@@ -71,8 +73,9 @@ class Resolver
                     self::CORE_CLASSES,
                 )
             );
-            $this->registerMiddlewares($middlewares);
+            $this->registerRequest();
             $this->registerBootstrap($bootstrap);
+            $this->registerMiddlewares($middlewares);
         } catch (ReflectionException $exception) {
             throw new InstanceException(
                 $exception->getMessage(),
@@ -87,14 +90,14 @@ class Resolver
         return $this->container->get(DispatcherInterface::class);
     }
 
+    public function getRequest(): ServerRequestInterface
+    {
+        return $this->container->get(ServerRequestInterface::class);
+    }
+
     public function getBootstrapDispatcher(): BootstrapDispatcher
     {
         return $this->bootstrapDispatcher;
-    }
-
-    public function getContainer(): ContainerInterface
-    {
-        return $this->container;
     }
 
     /**
@@ -107,7 +110,6 @@ class Resolver
             $this->container->add($id, $className);
         }
     }
-
 
     /**
      * @param array $bootstrap
@@ -145,5 +147,21 @@ class Resolver
 
             $this->getMiddlewareDispatcher()->add($middleware);
         }
+    }
+
+    private function registerRequest(): void
+    {
+        /** @var ServerRequestFactoryInterface $requestFactory */
+        $requestFactory = $this->container->get(ServerRequestFactoryInterface::class);
+
+        $request = $requestFactory
+            ->createServerRequest(
+                $_SERVER['REQUEST_METHOD'] ?? 'GET',
+                $_SERVER['REQUEST_URI'] ?? '/',
+                $_SERVER ?? []
+            )
+            ->withQueryParams($_GET ?? []);
+
+        $this->container->addByInstance(ServerRequestInterface::class, $request);
     }
 }
