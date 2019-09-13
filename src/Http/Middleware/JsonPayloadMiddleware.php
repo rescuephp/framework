@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Rescue\Helper\Json\Exception\DecodeException;
 
 class JsonPayloadMiddleware implements MiddlewareInterface
 {
@@ -22,15 +23,15 @@ class JsonPayloadMiddleware implements MiddlewareInterface
 
     /**
      * @inheritDoc
+     * @throws DecodeException
      */
     public function process(
         ServerRequestInterface $request,
         RequestHandlerInterface $handler
     ): ResponseInterface {
         if ($this->checkContentType($request) && $this->checkAllowedMethods($request)) {
-            $request = $request->withParsedBody(
-                json_decode((string)$request->getBody(), true)
-            );
+            $content = file_get_contents('php://input');
+            $request = $request->withParsedBody(jsonDecode($content, true));
         }
 
         return $handler->handle($request);
