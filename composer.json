@@ -13,11 +13,11 @@
     "require": {
         "php": ">=7.3",
         "ext-json": "*",
-        "rescuephp/http": "^1.0",
+        "rescuephp/container": "^1.0",
+        "rescuephp/http": "dev-master",
+        "rescuephp/routing": "dev-master",
         "psr/http-message": "^1.0",
         "psr/http-server-middleware": "^1.0",
-        "rescuephp/container": "^1.0",
-        "rescuephp/routing": "^1.0",
         "psr/http-factory": "^1.0"
     },
     "require-dev": {
