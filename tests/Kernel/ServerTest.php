@@ -18,7 +18,10 @@ use Rescue\Http\Factory\ResponseFactory;
 use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UriFactory;
 use Rescue\Http\FallbackHandlerInterface;
+use Rescue\Http\Middleware\Dispatcher;
+use Rescue\Http\Middleware\DispatcherInterface;
 use Rescue\Kernel\BootstrapInterface;
+use Rescue\Kernel\Exception\InstanceException;
 use Rescue\Kernel\Exception\KernelException;
 use Rescue\Kernel\Resolver;
 use Rescue\Kernel\Server;
@@ -140,6 +143,34 @@ final class ServerTest extends TestCase
         }
 
         $server->run();
+    }
+
+    public function testWithoutFallbackHandler(): void
+    {
+        $this->expectException(InstanceException::class);
+        new Resolver();
+    }
+
+    /**
+     * @throws InstanceException
+     */
+    public function testWithDispatcher(): void
+    {
+        $container = new Container();
+        $dispatcher = new Dispatcher($this->getFallbackHandler());
+        $container->addByInstance(DispatcherInterface::class, $dispatcher);
+
+        $resolver = new Resolver($container);
+        $this->assertEquals($dispatcher, $resolver->getMiddlewareDispatcher());
+    }
+
+    /**
+     * @throws InstanceException
+     */
+    public function testInvalidDefaultClasses(): void
+    {
+        $this->expectException(InstanceException::class);
+        new Resolver(null, ['a' => 'b']);
     }
 
     public function bootstrapProvider(): Generator

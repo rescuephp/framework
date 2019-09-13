@@ -36,8 +36,10 @@ class RoutingMiddleware implements MiddlewareInterface
      * @inheritDoc
      * @throws ReflectionException
      */
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
+    public function process(
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler
+    ): ResponseInterface {
         if (($router = $this->routerStorage->getRouter()) instanceof RouterInterface) {
             /** @var RequestHandlerInterface $routerHandler */
             $routerHandler = $this->container->add($router->getHandlerClass());

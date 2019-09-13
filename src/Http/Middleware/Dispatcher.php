@@ -7,7 +7,7 @@ namespace Rescue\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
-use Rescue\Http\FallbackHandlerInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use SplQueue;
 
 class Dispatcher implements DispatcherInterface
@@ -15,16 +15,15 @@ class Dispatcher implements DispatcherInterface
     /**
      * @var MiddlewareInterface[]|SplQueue
      */
-    private $queue;
+    private $queue = [];
 
     /**
-     * @var FallbackHandlerInterface
+     * @var RequestHandlerInterface
      */
     private $fallbackHandler;
 
-    public function __construct(FallbackHandlerInterface $fallbackHandler)
+    public function __construct(RequestHandlerInterface $fallbackHandler)
     {
-        $this->queue = new SplQueue();
         $this->fallbackHandler = $fallbackHandler;
     }
 
@@ -33,12 +32,12 @@ class Dispatcher implements DispatcherInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        if ($this->queue->isEmpty()) {
+        if (empty($this->queue)) {
             return $this->fallbackHandler->handle($request);
         }
 
         /** @var MiddlewareInterface $middleware */
-        $middleware = $this->queue->dequeue();
+        $middleware = array_shift($this->queue);
 
         return $middleware->process($request, $this);
     }
@@ -48,7 +47,7 @@ class Dispatcher implements DispatcherInterface
      */
     public function add(MiddlewareInterface $middleware): DispatcherInterface
     {
-        $this->queue->enqueue($middleware);
+        $this->queue[] = $middleware;
 
         return $this;
     }

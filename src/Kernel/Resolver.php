@@ -19,6 +19,7 @@ use Rescue\Http\Factory\ServerRequestFactory;
 use Rescue\Http\Factory\StreamFactory;
 use Rescue\Http\Factory\UploadedFileFactory;
 use Rescue\Http\Factory\UriFactory;
+use Rescue\Http\FallbackHandlerInterface;
 use Rescue\Http\Middleware\Dispatcher;
 use Rescue\Http\Middleware\DispatcherInterface;
 use Rescue\Kernel\Exception\InstanceException;
@@ -31,10 +32,6 @@ class Resolver
         ResponseFactoryInterface::class => ResponseFactory::class,
         UploadedFileFactoryInterface::class => UploadedFileFactory::class,
         ServerRequestFactoryInterface::class => ServerRequestFactory::class,
-    ];
-
-    private const CORE_CLASSES = [
-        DispatcherInterface::class => Dispatcher::class,
     ];
 
     /**
@@ -69,10 +66,10 @@ class Resolver
             $this->registerDefaultClasses(
                 array_merge(
                     self::HTTP_CLASSES,
-                    $defaultClasses,
-                    self::CORE_CLASSES,
+                    $defaultClasses
                 )
             );
+            $this->registerMiddlewareDispatcher();
             $this->registerRequest();
             $this->registerBootstrap($bootstrap);
             $this->registerMiddlewares($middlewares);
@@ -163,5 +160,30 @@ class Resolver
             ->withQueryParams($_GET ?? []);
 
         $this->container->addByInstance(ServerRequestInterface::class, $request);
+    }
+
+    /**
+     * @throws ReflectionException
+     * @throws InstanceException
+     */
+    private function registerMiddlewareDispatcher(): void
+    {
+        if ($this->container->has(DispatcherInterface::class)) {
+            return;
+        }
+
+        if (!$this->container->has(FallbackHandlerInterface::class)) {
+            throw new InstanceException(
+                FallbackHandlerInterface::class . ' instance not found'
+            );
+        }
+
+        $this->container->add(
+            DispatcherInterface::class,
+            Dispatcher::class,
+            [
+                $this->container->get(FallbackHandlerInterface::class),
+            ]
+        );
     }
 }
