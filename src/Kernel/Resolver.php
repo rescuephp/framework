@@ -50,13 +50,15 @@ class Resolver
      * @param array $defaultClasses
      * @param string[]|MiddlewareInterface[] $middlewares
      * @param string[]|BootstrapInterface[] $bootstrap
+     * @param array $environment
      * @throws InstanceException
      */
     public function __construct(
         ContainerInterface $container = null,
         array $defaultClasses = [],
         array $middlewares = [],
-        array $bootstrap = []
+        array $bootstrap = [],
+        array $environment = []
     ) {
         $this->container = $container ?? new Container();
         $this->bootstrapDispatcher = new BootstrapDispatcher();
@@ -69,6 +71,7 @@ class Resolver
                     $defaultClasses
                 )
             );
+            $this->registerEnvironment($environment);
             $this->registerMiddlewareDispatcher();
             $this->registerRequest();
             $this->registerBootstrap($bootstrap);
@@ -185,5 +188,11 @@ class Resolver
                 $this->container->get(FallbackHandlerInterface::class),
             ]
         );
+    }
+
+    private function registerEnvironment(array $environment): void
+    {
+        $env = new Environment($environment);
+        $this->container->addByInstance(EnvironmentInterface::class, $env);
     }
 }
