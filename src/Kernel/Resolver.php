@@ -45,7 +45,7 @@ class Resolver
     private $bootstrapDispatcher;
 
     /**
-     * Server constructor.
+     * Resolver constructor.
      * @param ContainerInterface|null $container
      * @param array $defaultClasses
      * @param string[]|MiddlewareInterface[] $middlewares

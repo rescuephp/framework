@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace Rescue\Kernel;
 
-use SplObjectStorage;
-
 class BootstrapDispatcher
 {
     /**
-     * @var SplObjectStorage|BootstrapInterface[]
+     * @var BootstrapInterface[]
      */
-    private $bootstrap;
+    private $bootstrap = [];
 
     public function __construct(array $queue = [])
     {
-        $this->bootstrap = new SplObjectStorage();
-
         foreach ($queue as $boot) {
             $this->add($boot);
         }
@@ -31,7 +27,7 @@ class BootstrapDispatcher
 
     public function add(BootstrapInterface $bootstrap): self
     {
-        $this->bootstrap->attach($bootstrap);
+        $this->bootstrap[] = $bootstrap;
 
         return $this;
     }

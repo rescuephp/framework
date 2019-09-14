@@ -11,7 +11,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Rescue\Helper\Json\Exception\DecodeException;
 
-class JsonPayloadMiddleware implements MiddlewareInterface
+class JsonPayloadMiddleware extends Payload implements MiddlewareInterface
 {
     protected const CONTENT_TYPE = 'application/json';
 
@@ -23,31 +23,24 @@ class JsonPayloadMiddleware implements MiddlewareInterface
 
     /**
      * @inheritDoc
-     * @throws DecodeException
      */
     public function process(
         ServerRequestInterface $request,
         RequestHandlerInterface $handler
     ): ResponseInterface {
-        if ($this->checkContentType($request) && $this->checkAllowedMethods($request)) {
-            $content = file_get_contents('php://input');
-            $request = $request->withParsedBody(jsonDecode($content, true));
-        }
+        $request = $this->parse($request);
 
         return $handler->handle($request);
     }
 
-    private function checkContentType(ServerRequestInterface $request): bool
+    /**
+     * @return mixed
+     * @throws DecodeException
+     */
+    public function getParsedContent()
     {
-        return in_array(self::CONTENT_TYPE, $request->getHeader('Content-Type'), true);
-    }
+        $content = file_get_contents('php://input');
 
-    private function checkAllowedMethods(ServerRequestInterface $request): bool
-    {
-        if (empty(self::ALLOWED_METHODS)) {
-            return true;
-        }
-
-        return in_array($request->getMethod(), self::ALLOWED_METHODS, true);
+        return jsonDecode($content, true);
     }
 }

@@ -19,6 +19,7 @@ class RoutingMiddleware implements MiddlewareInterface
      * @var RouterStorageInterface
      */
     private $routerStorage;
+
     /**
      * @var ContainerInterface
      */
