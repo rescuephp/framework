@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Rescue\Kernel;
 
-class Environment
+class Environment implements EnvironmentInterface
 {
     private const VALUE_MAP = [
         'true' => true,
