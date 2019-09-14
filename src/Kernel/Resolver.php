@@ -190,9 +190,12 @@ class Resolver
         );
     }
 
+    /**
+     * @param array $environment
+     * @throws ReflectionException
+     */
     private function registerEnvironment(array $environment): void
     {
-        $env = new Environment($environment);
-        $this->container->addByInstance(EnvironmentInterface::class, $env);
+        $this->container->add(EnvironmentInterface::class, Environment::class, [$environment]);
     }
 }
