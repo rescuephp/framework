@@ -11,7 +11,7 @@ class Server
     /**
      * @var Resolver
      */
-    private $resolver;
+    private Resolver $resolver;
 
     public function __construct(Resolver $resolver)
     {
@@ -48,5 +48,4 @@ class Server
 
         echo (string)$response->getBody();
     }
-
 }

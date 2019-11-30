@@ -21,10 +21,7 @@ use Rescue\Routing\RouterStorage;
 
 final class RoutingMiddlewareTest extends TestCase
 {
-    /**
-     * @var ServerRequestFactory
-     */
-    private $requestFactory;
+    private ServerRequestFactory $requestFactory;
 
     public function setUp(): void
     {
@@ -70,8 +67,7 @@ final class RoutingMiddlewareTest extends TestCase
 
     private function getFallbackHandler(): FallbackHandlerInterface
     {
-        return new class () implements FallbackHandlerInterface
-        {
+        return new class () implements FallbackHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface
             {
                 $responseFactory = new ResponseFactory(new StreamFactory());

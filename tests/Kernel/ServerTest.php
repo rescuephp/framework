@@ -244,10 +244,7 @@ final class ServerTest extends TestCase
     {
         return new class ($response) implements MiddlewareInterface
         {
-            /**
-             * @var string
-             */
-            private $response;
+            private string $response;
 
             public function __construct(string $response)
             {

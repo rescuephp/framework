@@ -34,15 +34,9 @@ class Resolver
         ServerRequestFactoryInterface::class => ServerRequestFactory::class,
     ];
 
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ContainerInterface $container;
 
-    /**
-     * @var BootstrapDispatcher
-     */
-    private $bootstrapDispatcher;
+    private BootstrapDispatcher $bootstrapDispatcher;
 
     /**
      * Resolver constructor.

@@ -17,15 +17,9 @@ use Rescue\Http\Middleware\JsonPayloadMiddleware;
 
 final class JsonPayloadMiddlewareTest extends TestCase
 {
-    /**
-     * @var ServerRequestFactory
-     */
-    private $requestFactory;
+    private ServerRequestFactory $requestFactory;
 
-    /**
-     * @var ServerRequestInterface
-     */
-    private $simpleRequest;
+    private ?ServerRequestInterface $simpleRequest;
 
     public function setUp(): void
     {
@@ -98,8 +92,7 @@ final class JsonPayloadMiddlewareTest extends TestCase
             $this->simpleRequest = $request;
         };
 
-        return new class ($updateRequest) implements FallbackHandlerInterface
-        {
+        return new class ($updateRequest) implements FallbackHandlerInterface {
             /**
              * @var callable
              */

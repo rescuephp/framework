@@ -15,15 +15,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class UploadedFilesMiddleware implements MiddlewareInterface
 {
-    /**
-     * @var UploadedFileFactoryInterface
-     */
-    private $uploadedFileFactory;
+    private UploadedFileFactoryInterface $uploadedFileFactory;
 
-    /**
-     * @var StreamFactoryInterface
-     */
-    private $streamFactory;
+    private StreamFactoryInterface $streamFactory;
 
     public function __construct(
         UploadedFileFactoryInterface $uploadedFileFactory,

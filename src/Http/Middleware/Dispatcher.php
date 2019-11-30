@@ -17,10 +17,7 @@ class Dispatcher implements DispatcherInterface
      */
     private $queue = [];
 
-    /**
-     * @var RequestHandlerInterface
-     */
-    private $fallbackHandler;
+    private RequestHandlerInterface $fallbackHandler;
 
     public function __construct(RequestHandlerInterface $fallbackHandler)
     {

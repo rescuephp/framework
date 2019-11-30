@@ -9,7 +9,7 @@ class BootstrapDispatcher
     /**
      * @var BootstrapInterface[]
      */
-    private $bootstrap = [];
+    private array $bootstrap = [];
 
     public function __construct(array $queue = [])
     {

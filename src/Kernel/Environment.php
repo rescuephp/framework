@@ -6,16 +6,14 @@ namespace Rescue\Kernel;
 
 class Environment implements EnvironmentInterface
 {
-    private const VALUE_MAP = [
+    private const VALUES_MAP = [
         'true' => true,
         'false' => false,
         'null' => null,
         'empty' => '',
     ];
-    /**
-     * @var array
-     */
-    private $values;
+
+    private array $values;
 
     public function __construct(array $values)
     {
@@ -45,6 +43,12 @@ class Environment implements EnvironmentInterface
      */
     private function parseValue($value)
     {
-        return self::VALUE_MAP[$value] ?? $value;
+        $lowerValue = strtolower($value);
+
+        if ($lowerValue === 'null') {
+            return null;
+        }
+
+        return self::VALUES_MAP[$lowerValue] ?? $value;
     }
 }

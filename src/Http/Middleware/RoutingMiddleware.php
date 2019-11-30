@@ -15,15 +15,9 @@ use Rescue\Routing\RouterStorageInterface;
 
 class RoutingMiddleware implements MiddlewareInterface
 {
-    /**
-     * @var RouterStorageInterface
-     */
-    private $routerStorage;
+    private RouterStorageInterface $routerStorage;
 
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ContainerInterface $container;
 
     public function __construct(
         RouterStorageInterface $routerStorage,

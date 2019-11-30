@@ -11,10 +11,7 @@ use Rescue\Helper\Json\Exception\EncodeException;
 
 class JsonResponse implements ResponseWrapperInterface
 {
-    /**
-     * @var ResponseFactoryInterface
-     */
-    private $responseFactory;
+    private ResponseFactoryInterface $responseFactory;
 
     public function __construct(ResponseFactoryInterface $responseFactory)
     {

@@ -10,10 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 abstract class RequestHandler implements RequestHandlerInterface
 {
-    /**
-     * @var ResponseWrapperInterface|null
-     */
-    private $wrapper;
+    private ?ResponseWrapperInterface $wrapper;
 
     public function withWrapper(ResponseWrapperInterface $wrapper): self
     {
